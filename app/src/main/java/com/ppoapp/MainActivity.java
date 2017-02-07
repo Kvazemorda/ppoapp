@@ -1,15 +1,14 @@
-package com.nextstep;
+package com.ppoapp;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.text.Html;
 import android.widget.ListView;
 
-import com.nextstep.constant.Constans;
-import com.nextstep.data.HelperFactory;
-import com.nextstep.entity.Content;
-import com.nextstep.service.AdapterTasks;
+import com.ppoapp.constant.Constans;
+import com.ppoapp.data.HelperFactory;
+import com.ppoapp.entity.Content;
+import com.ppoapp.service.AdapterTasks;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;

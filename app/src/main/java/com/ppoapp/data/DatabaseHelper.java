@@ -1,4 +1,4 @@
-package com.nextstep.data;
+package com.ppoapp.data;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -6,8 +6,8 @@ import android.util.Log;
 import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
-import com.nextstep.data.dao.ContentDAO;
-import com.nextstep.entity.Content;
+import com.ppoapp.data.dao.ContentDAO;
+import com.ppoapp.entity.Content;
 
 import java.sql.SQLException;
 

@@ -1,4 +1,4 @@
-package com.nextstep.entity;
+package com.ppoapp.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

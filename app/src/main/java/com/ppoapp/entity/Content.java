@@ -1,4 +1,4 @@
-package com.nextstep.entity;
+package com.ppoapp.entity;
 
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;

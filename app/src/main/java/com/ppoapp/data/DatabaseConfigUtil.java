@@ -1,4 +1,4 @@
-package com.nextstep.data;
+package com.ppoapp.data;
 
 
 import com.j256.ormlite.android.apptools.OrmLiteConfigUtil;

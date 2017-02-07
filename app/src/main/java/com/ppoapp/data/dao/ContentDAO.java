@@ -1,9 +1,9 @@
-package com.nextstep.data.dao;
+package com.ppoapp.data.dao;
 
 
 import com.j256.ormlite.dao.BaseDaoImpl;
 import com.j256.ormlite.support.ConnectionSource;
-import com.nextstep.entity.Content;
+import com.ppoapp.entity.Content;
 import java.sql.SQLException;
 import java.util.List;
 

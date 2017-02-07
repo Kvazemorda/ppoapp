@@ -1,8 +1,8 @@
-package com.nextstep;
+package com.ppoapp;
 
 import android.app.Application;
 
-import com.nextstep.data.HelperFactory;
+import com.ppoapp.data.HelperFactory;
 
 public class MyApplication extends Application {
 
