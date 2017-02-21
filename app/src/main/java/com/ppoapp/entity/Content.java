@@ -14,6 +14,7 @@ public class Content {
     @DatabaseField private String fulltext;
     @DatabaseField private String images;
     @DatabaseField private Date created;
+    @DatabaseField private int state;
 
     public Content() {
     }
@@ -64,6 +65,14 @@ public class Content {
 
     public void setCreated(Date created) {
         this.created = created;
+    }
+
+    public int getState() {
+        return state;
+    }
+
+    public void setState(int state) {
+        this.state = state;
     }
 
     @Override

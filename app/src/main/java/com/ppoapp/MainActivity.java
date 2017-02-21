@@ -1,20 +1,24 @@
 package com.ppoapp;
 
+import android.content.pm.ActivityInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.AbsListView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 
 import com.ppoapp.constant.Constans;
-import com.ppoapp.data.HelperFactory;
 import com.ppoapp.entity.Content;
-import com.ppoapp.service.AdapterTasks;
+import com.ppoapp.service.AdapterContent;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+
 import java.net.URI;
-import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -22,36 +26,50 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     protected List<Content> contents = new ArrayList<>();
-    Content content;
     protected Long id = 1l;
-    private Long currentDate;
+    protected long previousTotalItemCount;
+    boolean loading;
+    public ListView listViewContent;
+    protected AdapterContent adapterContent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        previousTotalItemCount = getCurrentDate();
         setContentView(R.layout.activity_main);
-        createPerson();
-        new HttpRequestTasks().execute();
-    }
+        listViewContent = (ListView) findViewById(R.id.tasksList);
+        contents = new ArrayList<>();
+        adapterContent = new AdapterContent(this, contents);
+        new HttpRequestContent().execute();
 
-    public void createPerson(){
-        try {
-            System.out.println(HelperFactory.getHelper().getContentDAO().getAllContent());
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        listViewContent.setAdapter(adapterContent);
+        loading = false;
     }
 
     public void fillListView(){
-        ListView listView = (ListView) findViewById(R.id.tasksList);
-        AdapterTasks adapterTasks = new AdapterTasks(this, contents);
-        listView.setAdapter(adapterTasks);
+        listViewContent.setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                if(firstVisibleItem + visibleItemCount == totalItemCount){
+                    loading = true;
+                    new HttpRequestContent().execute();
+                    adapterContent.notifyDataSetChanged();
+                }
+            }
+        });
+
     }
 
     /**
      * Get object from service
      */
-    public class HttpRequestTasks extends AsyncTask<Void, Void, Content[]> {
+    public class HttpRequestContent extends AsyncTask<Void, Void, Content[]> {
+
         @Override
         protected Content[] doInBackground(Void... params) {
             RestTemplate restTemplate = new RestTemplate();
@@ -59,30 +77,29 @@ public class MainActivity extends AppCompatActivity {
             restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
             URI url = UriComponentsBuilder.fromUriString(Constans.HOST)
                     .path(Constans.CONTENT)
-                    .queryParam("date", getCurrentDate())
+                    .queryParam("date", previousTotalItemCount)
                     .build()
                     .toUri();
             System.out.println(url.toString());
-            Content[] contentsArray = new Content[2]; //restTemplate.getForObject(url, Content[].class);
-            Content content = new Content();
-            content.setIntrotext("intro text");
-            content.setTitle("TITLE");
-            content.setImages("http://ppovankorneft.ru/images/news/2016/ElkaSFU/ban400.jpg");
-            Content content1 = new Content();
-            content1.setIntrotext("intro text1");
-            content1.setTitle("TITLE1");
-            content1.setImages("http://ppovankorneft.ru/images/news/2016/newYear/newYear400.jpg");
-
-            contentsArray[0] = content;
-            contentsArray[1] = content1;
-            return contentsArray;
+            try{
+                Content[] contentsArray = restTemplate.getForObject(url, Content[].class);
+                return contentsArray;
+            }catch (Exception e){
+                e.printStackTrace();
+                Content[] contentsArray = restTemplate.getForObject(url, Content[].class);
+                return contentsArray;
+            }
         }
 
         @Override
-        protected void onPostExecute(Content[] contetsArray) {
+        protected void onPostExecute(Content[] contentsArray) {
             //Обязательно передать в встроенную базу данных и потом из нее брать данные для приложения
-            contents = Arrays.asList(contetsArray);
+            contents.addAll(Arrays.asList(contentsArray));
+            previousTotalItemCount = contents.get(contents.size()-1).getCreated().getTime();
+            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+            System.out.println(sdf.format(new Date(previousTotalItemCount)));
             fillListView();
+
         }
     }
 

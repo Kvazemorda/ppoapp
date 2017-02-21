@@ -1,36 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    tools:context="com.ppoapp.MainActivity">
+    android:layout_gravity="top"
+    tools:context="com.ppoapp.MainActivity"
+    android:orientation="vertical">
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
 
-    <android.support.design.widget.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay"
-        android:background="@color/cashflowBG">
-
-        <TextView
-            android:text="@string/app_name"
+        <android.support.v7.widget.Toolbar
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/textView"
-            android:textAlignment="center"
-            android:textSize="20dp"
-            android:layout_margin="10dp"
-             />
-    </android.support.design.widget.AppBarLayout>
+            android:layout_height="wrap_content"
+            android:background="@color/toolbar">
 
-    <include layout="@layout/content_main" />
+            <TextView
+                    android:text="@string/app_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:id="@+id/textView"
+                    android:textAlignment="viewStart"
+                    android:textSize="20sp"
+                android:fontFamily="sans-serif"
+                android:textColor="#000000"
+                android:textAllCaps="false"
+                android:typeface="normal" />
+
+        </android.support.v7.widget.Toolbar>
+
+        <FrameLayout
+            android:layout_width="fill_parent"
+            android:layout_height="match_parent">
+
+            <include layout="@layout/content_main" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="@drawable/toolbar_dropshadow"/>
+        </FrameLayout>
 
 
-</android.support.design.widget.CoordinatorLayout>
+
+
+</LinearLayout>

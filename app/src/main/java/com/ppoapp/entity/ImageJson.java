@@ -2,7 +2,7 @@ package com.ppoapp.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@JsonIgnoreProperties()
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ImageJson {
     private String image_intro;
     private String image_fulltext;
