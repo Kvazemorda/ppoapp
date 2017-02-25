@@ -7,15 +7,14 @@ import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ppoapp.R;
+import com.ppoapp.controller.ExpandableTextView;
 import com.ppoapp.entity.Content;
 import com.ppoapp.entity.ImageJson;
-import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.util.List;
@@ -52,7 +51,8 @@ public class AdapterContent extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View view = convertView;
-        if(view == null){
+
+        if (view == null) {
             view = lInflater.inflate(R.layout.item_new, parent, false);
         }
         Content content = contents.get(position);
@@ -60,18 +60,41 @@ public class AdapterContent extends BaseAdapter {
         ImageJson imageJson = null;
         try {
             imageJson = mapper.readValue(content.getImages(), ImageJson.class);
-        ((TextView)view.findViewById(R.id.textOfTitle)).setText(content.getTitle());
-        ((TextView)view.findViewById(R.id.textOfIntro)).setText(Html.fromHtml(content.getIntrotext()));
-        Picasso.with(ctx)
-                .load(PPOSITE + imageJson.getImage_intro())
-                .placeholder(R.drawable.logo_ppo)
-                .into((ImageView) view.findViewById(R.id.imageOfNews));
+            ((TextView) view.findViewById(R.id.textOfTitle)).setText(content.getTitle());
+            //TextView introText = ((TextView) view.findViewById(R.id.textOfIntro));
+            ExpandableTextView textView = (ExpandableTextView) view.findViewById(R.id.textOfIntro);
+            if(content.getIntrotext().length() > content.getFulltext().length()){
+                textView.setText(Html.fromHtml(content.getIntrotext()));
+            }else {
+                textView.setText(Html.fromHtml(content.getFulltext()));
+            }
+
+            WebView webView = getWebView(view);
+
+            String htmlString = "<!DOCTYPE html><html>" +
+                    "<body style = \"text-align:center\"><img src=\"" +
+                    PPOSITE + imageJson.getImage_intro() +
+                    "\" alt=\"\" width=\"100%\"></body></html>";
+
+            webView.loadDataWithBaseURL(PPOSITE + imageJson.getImage_intro(), htmlString,
+                    "text/html", "UTF-8", null);
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (NullPointerException e){
+        } catch (NullPointerException e) {
             e.printStackTrace();
         }
         return view;
+    }
+
+    private WebView getWebView(View view) {
+        WebView webView = (WebView) view.findViewById(R.id.imageOfNews);
+        //webView.getSettings().setSupportZoom(true);
+        //webView.getSettings().setDisplayZoomControls(false);
+        //webView.getSettings().setBuiltInZoomControls(true);
+        webView.setPadding(0, 0, 0, 0);
+        webView.setBackgroundColor(0x00000000);
+
+        return webView;
     }
 
 }

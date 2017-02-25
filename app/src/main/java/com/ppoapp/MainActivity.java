@@ -4,10 +4,12 @@ import android.content.pm.ActivityInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.view.menu.ExpandedMenuView;
 import android.view.View;
 import android.widget.AbsListView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.ppoapp.constant.Constans;
 import com.ppoapp.entity.Content;
@@ -42,8 +44,8 @@ public class MainActivity extends AppCompatActivity {
         contents = new ArrayList<>();
         adapterContent = new AdapterContent(this, contents);
         new HttpRequestContent().execute();
-
         listViewContent.setAdapter(adapterContent);
+        fillListView();
         loading = false;
     }
 
@@ -58,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
                 if(firstVisibleItem + visibleItemCount == totalItemCount){
                     loading = true;
                     new HttpRequestContent().execute();
-                    adapterContent.notifyDataSetChanged();
+                    //adapterContent.notifyDataSetChanged();
                 }
             }
         });
@@ -82,12 +84,18 @@ public class MainActivity extends AppCompatActivity {
                     .toUri();
             System.out.println(url.toString());
             try{
-                Content[] contentsArray = restTemplate.getForObject(url, Content[].class);
-                return contentsArray;
+                return getContent(url, restTemplate);
             }catch (Exception e){
                 e.printStackTrace();
-                Content[] contentsArray = restTemplate.getForObject(url, Content[].class);
-                return contentsArray;
+                return getContent(url, restTemplate);
+            }
+        }
+
+        Content[] getContent(URI url, RestTemplate restTemplate){
+            try {
+                return restTemplate.getForObject(url, Content[].class);
+            }catch (Exception e){
+                return getContent(url, restTemplate);
             }
         }
 
@@ -96,12 +104,12 @@ public class MainActivity extends AppCompatActivity {
             //Обязательно передать в встроенную базу данных и потом из нее брать данные для приложения
             contents.addAll(Arrays.asList(contentsArray));
             previousTotalItemCount = contents.get(contents.size()-1).getCreated().getTime();
+            adapterContent.notifyDataSetChanged();
             SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
             System.out.println(sdf.format(new Date(previousTotalItemCount)));
-            fillListView();
-
         }
     }
+
 
     protected long getCurrentDate(){
         return new Date().getTime();
