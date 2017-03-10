@@ -1,18 +1,23 @@
 package com.ppoapp.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
+
+import java.util.Comparator;
 import java.util.Date;
 
-
+@JsonIgnoreProperties()
 @DatabaseTable(tableName = "ppo1_content")
-public class Content {
+public class Content implements Comparable {
 
-    @DatabaseField(generatedId = true) private long id;
+    @DatabaseField(id = true) private long id;
     @DatabaseField private String title;
     @DatabaseField private String introtext;
     @DatabaseField private String fulltext;
     @DatabaseField private String images;
+    @JsonFormat(pattern = "MMM dd, yyyy")
     @DatabaseField private Date created;
     @DatabaseField private int state;
 
@@ -112,5 +117,18 @@ public class Content {
                 ", images='" + images + '\'' +
                 ", createdBy='" + created + '\'' +
                 '}';
+    }
+
+
+    @Override
+    public int compareTo(Object o) {
+        Content content = (Content) o;
+        if(this.created.after(content.created)){
+            return 1;
+        }else if(this.created.before(content.created)) {
+            return -1;
+        }else {
+            return 0;
+        }
     }
 }

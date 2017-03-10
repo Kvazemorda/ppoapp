@@ -1,5 +1,6 @@
 package com.ppoapp;
 
+import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -11,25 +12,42 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.j256.ormlite.table.TableUtils;
 import com.ppoapp.constant.Constans;
+import com.ppoapp.controller.EndlessScrollListener;
+import com.ppoapp.controller.ExpandableTextView;
+import com.ppoapp.data.HelperFactory;
 import com.ppoapp.entity.Content;
 import com.ppoapp.service.AdapterContent;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.TreeSet;
 
 public class MainActivity extends AppCompatActivity {
-    protected List<Content> contents = new ArrayList<>();
+    protected ArrayList<Content> contents;
     protected Long id = 1l;
     protected long previousTotalItemCount;
+    protected int totalItems = 0;
     boolean loading;
     public ListView listViewContent;
     protected AdapterContent adapterContent;
@@ -37,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        HelperFactory.setHelper(getApplicationContext());
         setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         previousTotalItemCount = getCurrentDate();
         setContentView(R.layout.activity_main);
@@ -50,21 +69,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void fillListView(){
-        listViewContent.setOnScrollListener(new AbsListView.OnScrollListener() {
+        listViewContent.setOnScrollListener(new EndlessScrollListener() {
             @Override
-            public void onScrollStateChanged(AbsListView view, int scrollState) {
-            }
-
-            @Override
-            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-                if(firstVisibleItem + visibleItemCount == totalItemCount){
-                    loading = true;
-                    new HttpRequestContent().execute();
-                    //adapterContent.notifyDataSetChanged();
-                }
+            public boolean onLoadMore(int page, int totalItemsCount) {
+                loadNextDataFromApi(totalItemsCount);
+                return true;
             }
         });
+    }
 
+    private void loadNextDataFromApi(int totalItemsCount){
+        this.totalItems = totalItemsCount;
+        new HttpRequestContent().execute();
     }
 
     /**
@@ -78,40 +94,72 @@ public class MainActivity extends AppCompatActivity {
             restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
             restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
             URI url = UriComponentsBuilder.fromUriString(Constans.HOST)
-                    .path(Constans.CONTENT)
-                    .queryParam("date", previousTotalItemCount)
+                    .path(Constans.CONTENT_BY_TOTAL)
+                    .queryParam("totalItems", totalItems)
                     .build()
                     .toUri();
             System.out.println(url.toString());
-            try{
-                return getContent(url, restTemplate);
-            }catch (Exception e){
+
+            int count = 0;
+            try {
+                return getContent(url, restTemplate, count);
+            } catch (Exception e) {
                 e.printStackTrace();
-                return getContent(url, restTemplate);
+                return null;
             }
         }
 
-        Content[] getContent(URI url, RestTemplate restTemplate){
-            try {
-                return restTemplate.getForObject(url, Content[].class);
-            }catch (Exception e){
-                return getContent(url, restTemplate);
+        Content[] getContent(URI url, RestTemplate restTemplate, int count) throws Exception {
+            count++;
+            if (count > 5) {
+                throw new Exception();
+            } else {
+                try {
+                    Content[] rest = restTemplate.getForObject(url, Content[].class);
+                    for(Content content : rest){
+                        System.out.println(content.getTitle());
+                    }
+                    return rest;
+                } catch (Exception e) {
+                    return getContent(url, restTemplate, count);
+                }
             }
         }
 
         @Override
         protected void onPostExecute(Content[] contentsArray) {
             //Обязательно передать в встроенную базу данных и потом из нее брать данные для приложения
-            contents.addAll(Arrays.asList(contentsArray));
-            previousTotalItemCount = contents.get(contents.size()-1).getCreated().getTime();
-            adapterContent.notifyDataSetChanged();
-            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
-            System.out.println(sdf.format(new Date(previousTotalItemCount)));
+            try {
+                for(Content content: contentsArray){
+                    HelperFactory.getHelper().getContentDAO().createOrUpdate(content);
+                }
+                contents.addAll(HelperFactory.getHelper().getContentDAO().getLimitContent(totalItems));
+                System.out.println("____________________________________________ " + totalItems);
+                for(Content content : contents){
+                    System.out.println();
+                    System.out.println(content.getTitle());
+                    System.out.println();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            if(contents.size() > 0){
+                previousTotalItemCount = contents.get(contents.size()-1).getCreated().getTime();
+                adapterContent.notifyDataSetChanged();
+                SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+                System.out.println(sdf.format(new Date(previousTotalItemCount)));
+            }
         }
     }
 
 
     protected long getCurrentDate(){
         return new Date().getTime();
+    }
+
+    @Override
+    protected void onDestroy() {
+        HelperFactory.releaseHelper();
+        super.onDestroy();
     }
 }
