@@ -116,9 +116,6 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 try {
                     Content[] rest = restTemplate.getForObject(url, Content[].class);
-                    for(Content content : rest){
-                        System.out.println(content.getTitle());
-                    }
                     return rest;
                 } catch (Exception e) {
                     return getContent(url, restTemplate, count);
@@ -134,20 +131,12 @@ public class MainActivity extends AppCompatActivity {
                     HelperFactory.getHelper().getContentDAO().createOrUpdate(content);
                 }
                 contents.addAll(HelperFactory.getHelper().getContentDAO().getLimitContent(totalItems));
-                System.out.println("____________________________________________ " + totalItems);
-                for(Content content : contents){
-                    System.out.println();
-                    System.out.println(content.getTitle());
-                    System.out.println();
-                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
             if(contents.size() > 0){
                 previousTotalItemCount = contents.get(contents.size()-1).getCreated().getTime();
                 adapterContent.notifyDataSetChanged();
-                SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
-                System.out.println(sdf.format(new Date(previousTotalItemCount)));
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.ppoapp.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
@@ -20,6 +21,8 @@ public class Content implements Comparable {
     @JsonFormat(pattern = "MMM dd, yyyy")
     @DatabaseField private Date created;
     @DatabaseField private int state;
+    @JsonIgnore
+    @DatabaseField private String localImage;
 
     public Content() {
     }
@@ -78,6 +81,14 @@ public class Content implements Comparable {
 
     public void setState(int state) {
         this.state = state;
+    }
+
+    public String getLocalImage() {
+        return localImage;
+    }
+
+    public void setLocalImage(String localImage) {
+        this.localImage = localImage;
     }
 
     @Override
