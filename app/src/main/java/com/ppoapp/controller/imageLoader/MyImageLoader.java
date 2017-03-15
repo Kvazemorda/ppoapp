@@ -1,4 +1,4 @@
-package com.ppoapp.controller;
+package com.ppoapp.controller.imageLoader;
 
 
 import android.app.ActivityManager;
@@ -17,6 +17,7 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.download.BaseImageDownloader;
 import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
+import com.ppoapp.R;
 import com.ppoapp.data.HelperFactory;
 import com.ppoapp.data.dao.ContentDAO;
 import com.ppoapp.entity.Content;
@@ -35,35 +36,20 @@ import static com.ppoapp.constant.Constans.PPOSITE;
 public class MyImageLoader {
     Context context;
     ImageView imageView;
+    Content content;
+    DisplayImageOptions options;
 
-
-    public MyImageLoader(Context context, ImageView imageView) {
+    public MyImageLoader(Context context, ImageView imageView, Content content) {
         this.context = context;
         this.imageView = imageView;
-
-        Executor downloadExecutor = Executors.newFixedThreadPool(5);
-        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        int memClass = am.getMemoryClass();
-        final int memoryCacheSize = 1024 * 1024 * memClass / 8;
-
-        DisplayImageOptions options = new DisplayImageOptions.Builder()
-                .showImageOnLoading(android.R.color.transparent)
-                .bitmapConfig(Bitmap.Config.RGB_565)
-                .imageScaleType(ImageScaleType.IN_SAMPLE_INT)
-                .cacheInMemory(true)
+        this.content = content;
+        options = new DisplayImageOptions.Builder()
+                .showStubImage(R.drawable.logo_app)
+                .showImageForEmptyUri(R.drawable.logo_app)
                 .build();
-
-        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(context)
-                .taskExecutor(downloadExecutor)
-                .memoryCache(new UsingFreqLimitedMemoryCache(memoryCacheSize)) // 2 Mb
-                .imageDownloader(new BaseImageDownloader(context, 5 * 1000, 30 * 1000)) // connectTimeout (5 s), readTimeout (30 s)
-                .defaultDisplayImageOptions(options)
-                .build();
-
-        ImageLoader.getInstance().init(config);
     }
 
-    public void loadImage(final Content content){
+    public void loadImage(){
         String pathToFile = getPathToFile(content);
         if(pathToFile != null){
             ImageLoader.getInstance().loadImage(getPathToFile(content), new SimpleImageLoadingListener(){
@@ -79,12 +65,12 @@ public class MyImageLoader {
 
                     try {
                         FileOutputStream fos = new FileOutputStream(mediaFile);
-                        loadedImage.compress(Bitmap.CompressFormat.PNG, 90, fos);
-                        //loadedImage.createScaledBitmap(loadedImage, )
-                        content.setLocalImage(imageFileDir.getPath() + File.separator + content.getId() + ".jpeg");
+                        loadedImage.compress(Bitmap.CompressFormat.JPEG, 20, fos);
+                        content.setLocalImage(Environment.getExternalStorageDirectory() + mediaFile.getAbsolutePath());
+
                         HelperFactory.getHelper().getContentDAO().update(content);
+                        ImageLoader.getInstance().displayImage("file:///" + mediaFile.getAbsolutePath(), imageView, options);
                         fos.close();
-                        ImageLoader.getInstance().displayImage("file:///mnt/" + content.getLocalImage(), imageView);
 
                     } catch (SQLException e) {
                             e.printStackTrace();

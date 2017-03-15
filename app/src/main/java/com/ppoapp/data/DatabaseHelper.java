@@ -52,7 +52,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
         }
     }
 
-    //синглтон для GoalDAO wtf???
+    //синглтон для GoalDAO
     public ContentDAO getContentDAO() throws SQLException{
         if(contentDAO == null){
             contentDAO = new ContentDAO(getConnectionSource(), Content.class);

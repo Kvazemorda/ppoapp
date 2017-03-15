@@ -16,6 +16,7 @@ import com.j256.ormlite.table.TableUtils;
 import com.ppoapp.constant.Constans;
 import com.ppoapp.controller.EndlessScrollListener;
 import com.ppoapp.controller.ExpandableTextView;
+import com.ppoapp.controller.imageLoader.ImageLoaderInit;
 import com.ppoapp.data.HelperFactory;
 import com.ppoapp.entity.Content;
 import com.ppoapp.service.AdapterContent;
@@ -56,6 +57,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         HelperFactory.setHelper(getApplicationContext());
+        //инитциализация лоадера
+        ImageLoaderInit imageLoaderInit = new ImageLoaderInit(this);
         setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         previousTotalItemCount = getCurrentDate();
         setContentView(R.layout.activity_main);
@@ -93,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
             restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
+
             URI url = UriComponentsBuilder.fromUriString(Constans.HOST)
                     .path(Constans.CONTENT_BY_TOTAL)
                     .queryParam("totalItems", totalItems)

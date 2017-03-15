@@ -1,37 +1,23 @@
 package com.ppoapp.service;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
-import android.os.Environment;
 import android.support.annotation.RequiresApi;
 import android.text.Html;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nostra13.universalimageloader.core.ImageLoader;
+
 import com.ppoapp.R;
 import com.ppoapp.controller.ExpandableTextView;
-import com.ppoapp.controller.MyImageLoader;
-import com.ppoapp.data.dao.ContentDAO;
+import com.ppoapp.controller.imageLoader.MyImageLoader;
 import com.ppoapp.entity.Content;
-import com.ppoapp.entity.ImageJson;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.ppoapp.constant.Constans.PPOSITE;
 
 public class AdapterContent extends BaseAdapter {
     Context ctx;
@@ -86,9 +72,8 @@ public class AdapterContent extends BaseAdapter {
         try {
             holder.title.setText(content.getTitle());
             setDescription(holder.description, content);
-            MyImageLoader myImageLoader = new MyImageLoader(ctx, holder.imageView);
-            myImageLoader.loadImage(content);
-            System.out.println(content.getLocalImage());
+            MyImageLoader myImageLoader = new MyImageLoader(ctx, holder.imageView, content);
+            myImageLoader.loadImage();
 
         } catch (NullPointerException e) {
             e.printStackTrace();
