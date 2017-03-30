@@ -1,6 +1,7 @@
 package com.ppoapp.controller;
 
 
+import android.util.Log;
 import android.widget.AbsListView;
 
 public abstract class EndlessScrollListener implements AbsListView.OnScrollListener{
@@ -15,6 +16,8 @@ public abstract class EndlessScrollListener implements AbsListView.OnScrollListe
     private boolean loading = true;
     // Sets the starting page index
     private int startingPageIndex = 0;
+
+    private int firstVisibleItem = 0;
 
     public EndlessScrollListener() {
     }
@@ -33,6 +36,7 @@ public abstract class EndlessScrollListener implements AbsListView.OnScrollListe
     @Override
     public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount)
     {
+        this.firstVisibleItem = firstVisibleItem;
         // If the total item count is zero and the previous isn't, assume the
         // list is invalidated and should be reset back to initial state
         if (totalItemCount < previousTotalItemCount) {
@@ -52,7 +56,7 @@ public abstract class EndlessScrollListener implements AbsListView.OnScrollListe
         // If it isn't currently loading, we check to see if we have breached
         // the visibleThreshold and need to reload more data.
         // If we do need to reload some more data, we execute onLoadMore to fetch the data.
-        if (!loading && (firstVisibleItem + visibleItemCount + visibleThreshold) >= totalItemCount ) {
+        if (!loading && (firstVisibleItem + visibleItemCount + visibleThreshold + 5) >= totalItemCount ) {
             loading = onLoadMore(currentPage + 1, totalItemCount);
         }
     }
@@ -61,8 +65,20 @@ public abstract class EndlessScrollListener implements AbsListView.OnScrollListe
     // Returns true if more data is being loaded; returns false if there is no more data to load.
     public abstract boolean onLoadMore(int page, int totalItemsCount);
 
+    public abstract void checkNewsForLoad();
+
     @Override
     public void onScrollStateChanged(AbsListView view, int scrollState) {
         // Don't take any action on changed
+        int visibleSum = 0;
+        if(firstVisibleItem == 0 && scrollState == 2) {
+            visibleSum = firstVisibleItem + scrollState;
+        }
+        if(firstVisibleItem == 0 && scrollState == 0 && visibleSum == 0){
+                checkNewsForLoad();
+                visibleSum = 0;
+        }
+        //System.out.println("firstVisibleItem " + firstVisibleItem  + " scrollState " + scrollState  + " visibleSum " + visibleSum );
+
     }
 }

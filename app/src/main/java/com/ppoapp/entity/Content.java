@@ -18,11 +18,16 @@ public class Content implements Comparable {
     @DatabaseField private String introtext;
     @DatabaseField private String fulltext;
     @DatabaseField private String images;
-    @JsonFormat(pattern = "MMM dd, yyyy")
+//    @JsonFormat(pattern = "EEE, dd MMM yyyy HH:mm:ss zzz")
     @DatabaseField private Date created;
+  //  @JsonFormat(pattern = "EEE, dd MMM yyyy HH:mm:ss zzz")
+    @DatabaseField private Date modified;
     @DatabaseField private int state;
     @JsonIgnore
     @DatabaseField private String localImage;
+    @DatabaseField private String version;
+// Сделать условие if state != 1 удалить из внутренней базы данных и не вставлять в листвью
+    //Изменить запрос на сервере, у брать sate =1
 
     public Content() {
     }
@@ -91,6 +96,22 @@ public class Content implements Comparable {
         this.localImage = localImage;
     }
 
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public Date getModified() {
+        return modified;
+    }
+
+    public void setModified(Date modified) {
+        this.modified = modified;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -120,23 +141,19 @@ public class Content implements Comparable {
 
     @Override
     public String toString() {
-        return "ContentDAO{" +
-                "id=" + id +
+        return "Content{" +
+                "localImage='" + localImage + '\'' +
+                ", id=" + id +
                 ", title='" + title + '\'' +
-                ", introtext='" + introtext + '\'' +
-                ", fulltext='" + fulltext + '\'' +
-                ", images='" + images + '\'' +
-                ", createdBy='" + created + '\'' +
                 '}';
     }
-
 
     @Override
     public int compareTo(Object o) {
         Content content = (Content) o;
-        if(this.created.after(content.created)){
+        if(this.modified.after(content.modified)){
             return 1;
-        }else if(this.created.before(content.created)) {
+        }else if(this.modified.before(content.modified)) {
             return -1;
         }else {
             return 0;

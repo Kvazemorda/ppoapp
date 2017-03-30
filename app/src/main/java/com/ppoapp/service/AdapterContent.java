@@ -11,6 +11,8 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
 import com.ppoapp.R;
 import com.ppoapp.controller.ExpandableTextView;
 import com.ppoapp.controller.imageLoader.MyImageLoader;
@@ -58,7 +60,6 @@ public class AdapterContent extends BaseAdapter {
         ViewHolder holder;
 
         if (convertView == null) {
-
             convertView = lInflater.inflate(R.layout.item_new, parent, false);
             holder = new ViewHolder();
             holder.title = (TextView) convertView.findViewById(R.id.textOfTitle);
@@ -74,7 +75,6 @@ public class AdapterContent extends BaseAdapter {
             setDescription(holder.description, content);
             MyImageLoader myImageLoader = new MyImageLoader(ctx, holder.imageView, content);
             myImageLoader.loadImage();
-
         } catch (NullPointerException e) {
             e.printStackTrace();
         }

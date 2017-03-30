@@ -44,8 +44,8 @@ public class MyImageLoader {
         this.imageView = imageView;
         this.content = content;
         options = new DisplayImageOptions.Builder()
-                .showStubImage(R.drawable.logo_app)
-                .showImageForEmptyUri(R.drawable.logo_app)
+                .showStubImage(R.drawable.logo_ppo)
+                .showImageForEmptyUri(R.drawable.logo_ppo)
                 .build();
     }
 
@@ -55,29 +55,33 @@ public class MyImageLoader {
             ImageLoader.getInstance().loadImage(getPathToFile(content), new SimpleImageLoadingListener(){
                 @Override
                 public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
-                    File imageFileDir = new File(Environment.getExternalStorageDirectory() + "/ppo/data/"+ context.getPackageName() + "/Image");
-                    if (! imageFileDir.exists()){
-                        if (! imageFileDir.mkdirs()){
-                            Log.d("TAG", "Картинка не скачалась");
+                    if(content.getLocalImage() == null){
+                        File imageFileDir = new File(Environment.getExternalStorageDirectory() + "/ppo/data/"+ context.getPackageName() + "/Image");
+                        if (! imageFileDir.exists()){
+                            if (! imageFileDir.mkdirs()){
+                                Log.d("TAG", "Картинка не скачалась");
+                            }
                         }
-                    }
-                    File mediaFile = new File(imageFileDir.getPath() + File.separator + content.getId() + ".jpeg");
+                        File mediaFile = new File(imageFileDir.getPath() + File.separator + content.getId() + ".jpeg");
+                        try {
+                            FileOutputStream fos = new FileOutputStream(mediaFile);
+                            loadedImage.compress(Bitmap.CompressFormat.JPEG, 20, fos);
+                            content.setLocalImage(mediaFile.getAbsolutePath());
+                            HelperFactory.getHelper().getContentDAO().update(content);
+                            fos.close();
+                            ImageLoader.getInstance().displayImage("file:///" + content.getLocalImage(), imageView);
 
-                    try {
-                        FileOutputStream fos = new FileOutputStream(mediaFile);
-                        loadedImage.compress(Bitmap.CompressFormat.JPEG, 20, fos);
-                        content.setLocalImage(Environment.getExternalStorageDirectory() + mediaFile.getAbsolutePath());
-
-                        HelperFactory.getHelper().getContentDAO().update(content);
-                        ImageLoader.getInstance().displayImage("file:///" + mediaFile.getAbsolutePath(), imageView, options);
-                        fos.close();
-
-                    } catch (SQLException e) {
+                        } catch (SQLException e) {
                             e.printStackTrace();
-                    } catch (FileNotFoundException e) {
-                        Log.d("TAG", "File not found: " + e.getMessage());
-                    } catch (IOException e) {
-                        Log.d("TAG", "Error accessing file: " + e.getMessage());
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                            Log.d("TAG", "File not found: " + e.getMessage());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            Log.d("TAG", "Error accessing file: " + e.getMessage());
+                        }
+                    }else {
+                        ImageLoader.getInstance().displayImage("file:///" + content.getLocalImage(), imageView);
                     }
                 }
             });
@@ -92,6 +96,7 @@ public class MyImageLoader {
             String htmlString = PPOSITE + imageJson.getImage_intro();
             return htmlString;
         } catch (IOException e) {
+            e.printStackTrace();
             Log.d("TAG", "File not found: " + e.getMessage());
             return null;
         }
