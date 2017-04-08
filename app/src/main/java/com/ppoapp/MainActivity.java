@@ -14,7 +14,6 @@ import com.ppoapp.controller.EndlessScrollListener;
 import com.ppoapp.controller.imageLoader.ImageLoaderInit;
 import com.ppoapp.data.HelperFactory;
 import com.ppoapp.entity.Content;
-import com.ppoapp.entity.Visit;
 import com.ppoapp.service.AdapterContent;
 import com.ppoapp.service.MyForeground;
 
@@ -34,15 +33,13 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
     protected ArrayList<Content> contents;
     protected Long id = 1l;
-    protected long dateLastNew;
     protected int totalItems = 0;
     boolean loading;
     public ListView listViewContent;
     protected AdapterContent adapterContent;
     protected int limitQueryToServer = 5;
-    private Date currendDate;
     private static final long FIRST_VISIT = 1388509200000l;
-    private Visit visit = null;
+    private long lastVisit = FIRST_VISIT;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +54,6 @@ public class MainActivity extends AppCompatActivity {
         listViewContent.setAlwaysDrawnWithCacheEnabled(true);
         contents = new ArrayList<>();
         adapterContent = new AdapterContent(this, contents);
-        dateLastNew = getDateLastVisit();
         loadNextDataFromApi(totalItems);
         listViewContent.setAdapter(adapterContent);
         fillListView();
@@ -77,8 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void checkNewsForLoad() {
-                System.out.println(new Date(getDateLastVisit()) + " ====================================================================");
-                new HttpRequestForCheckNews().execute(getDateLastVisit());
+                new HttpRequestForCheckNews().execute();
             }
         });
     }
@@ -104,10 +99,10 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(List<Content> contentsFromDB) {
             if(contentsFromDB.size() > 0){
-                contents.addAll(contentsFromDB);
+                addNewContent(contentsFromDB);
                 adapterContent.notifyDataSetChanged();
                 //проверка свежих новостей
-                new HttpRequestForCheckNews().execute(getDateLastVisit());
+                //new HttpRequestForCheckNews().execute();
             }else {
                 new HttpRequestContent().execute(totalItems);
             }
@@ -160,25 +155,16 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(Content[] contentsArray) {
             //Обязательно передать в встроенную базу данных и потом из нее брать данные для приложения
             try {
+
                 for(Content content: contentsArray){
-                    if(content.getState() == 1){
-                        HelperFactory.getHelper().getContentDAO().createOrUpdate(content);
-                    }
+                    HelperFactory.getHelper().getContentDAO().createOrUpdate(content);
                 }
                 List<Content> list = HelperFactory.getHelper().getContentDAO().getLimitContent(totalItems);
-                for(Content content: list){
-                    if(content.getState() == 1){
-                        contents.add(content);
-                    }else {
-                        File image = new File("file:///" + content.getLocalImage());
-                        image.delete();
-                        HelperFactory.getHelper().getContentDAO().delete(content);
-                    }
-                }
-                adapterContent.notifyDataSetChanged();
+                //обновляю последний визит
                 if(list.size() > 0){
-                    saveLastVisit(visit, list.get(list.size()-1).getModified());
+                    lastVisit = list.get(0).getModified().getTime();
                 }
+                addNewContent(list);
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -198,10 +184,11 @@ public class MainActivity extends AppCompatActivity {
 
             URI url = UriComponentsBuilder.fromUriString(Constans.HOST)
                     .path(Constans.CHECK_NEW)
-                    .queryParam("date", params[0])
+                    .queryParam("date", getDateLastVisit())
                     .build()
                     .toUri();
             System.out.println(url.toString());
+            System.out.println(new Date(getDateLastVisit()));
 
             int count = 0;
             try {
@@ -209,6 +196,20 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception e) {
                 e.printStackTrace();
                 return null;
+            }
+        }
+
+        protected long getDateLastVisit(){
+            try {
+                if(lastVisit != FIRST_VISIT){
+                    return lastVisit;
+                }else {
+                    Content content = HelperFactory.getHelper().getContentDAO().getLastContent();
+                    return content.getModified().getTime();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return FIRST_VISIT;
             }
         }
 
@@ -230,27 +231,10 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(Integer quantityLastNews) {
             if(quantityLastNews > 0){
                 new HttpRequestContent().execute(0);
+            }else {
+                checkContentsOnOldNew();
             }
         }
-    }
-
-
-    protected long getDateLastVisit(){
-        if(visit == null){
-            visit = getLastVisit();
-        }
-        if(visit.getDateOfVisit() == null){
-            visit.setDateOfVisit(new Date(FIRST_VISIT));
-            try {
-                HelperFactory.getHelper().getVisitDAO().createOrUpdate(visit);
-                return visit.getDateOfVisit().getTime();
-            } catch (SQLException e) {
-                Log.e(TAG,"error save first visit" + e);
-                e.printStackTrace();
-            }
-        }else return visit.getDateOfVisit().getTime();
-
-        return visit.getDateOfVisit().getTime();
     }
 
     @Override
@@ -259,27 +243,30 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    public void saveLastVisit(Visit visit, Date date){
-        visit.setDateOfVisit(date);
-        try {
-            HelperFactory.getHelper().getVisitDAO().createOrUpdate(visit);
-        } catch (SQLException e) {
-            Log.e(TAG,"error create or update date of visit " + e);
-            e.printStackTrace();
+    protected synchronized void checkContentsOnOldNew(){
+        ArrayList<Content> copyContents = new ArrayList<>(contents);
+        for(Content content: copyContents){
+            if(content.getState() != 1){
+                contents.remove(content);
+            }
+            adapterContent.notifyDataSetChanged();
         }
     }
 
-    public Visit getLastVisit(){
-        Visit visit = null;
-        try {
-            visit = HelperFactory.getHelper().getVisitDAO().getLastVisit();
-            if(visit == null){
-                visit = new Visit(new Date(FIRST_VISIT));
+    // сделать добавление нового контента асинхронно
+    //понять почему не грузиться дальше лист.. почемуто loading не переходит в false
+
+    protected void addNewContent(List<Content> list){
+        for(Content content: list){
+            if(content.getState() == 1 && !contents.contains(content)){
+                contents.add(content);
+            }else if(content.getState() == 1 && contents.contains(content)){
+                contents.remove(content);
+                contents.add(content);
             }
-            return visit;
-        } catch (SQLException e) {
-            Log.e(TAG,"error get last visit" + e);
-            return new Visit(new Date(FIRST_VISIT));
         }
+        checkContentsOnOldNew();
+        adapterContent.notifyDataSetChanged();
     }
+
 }

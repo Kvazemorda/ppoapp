@@ -26,6 +26,8 @@ public class Content implements Comparable {
     @JsonIgnore
     @DatabaseField private String localImage;
     @DatabaseField private String version;
+    @DatabaseField private long catid;
+
 // Сделать условие if state != 1 удалить из внутренней базы данных и не вставлять в листвью
     //Изменить запрос на сервере, у брать sate =1
 
@@ -110,6 +112,14 @@ public class Content implements Comparable {
 
     public void setModified(Date modified) {
         this.modified = modified;
+    }
+
+    public long getCatid() {
+        return catid;
+    }
+
+    public void setCatid(long catid) {
+        this.catid = catid;
     }
 
     @Override

@@ -24,12 +24,24 @@ public class ContentDAO extends BaseDaoImpl<Content, Integer> {
         QueryBuilder<Content, Integer> queryBuilder = this.queryBuilder();
         try {
             queryBuilder.offset((long)totalItems).limit(10l);
-            queryBuilder.orderBy("created", false);
+            queryBuilder.orderBy("modified", false);
             return this.query(queryBuilder.prepare());
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
         }
 
+    }
+
+    public Content getLastContent(){
+        QueryBuilder<Content, Integer> queryBuilder = this.queryBuilder();
+        try {
+            queryBuilder.offset((long)0).limit(1l);
+            queryBuilder.orderBy("modified", false);
+            return this.query(queryBuilder.prepare()).get(0);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

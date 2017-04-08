@@ -7,9 +7,7 @@ import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.ppoapp.data.dao.ContentDAO;
-import com.ppoapp.data.dao.VisitDAO;
 import com.ppoapp.entity.Content;
-import com.ppoapp.entity.Visit;
 
 import java.sql.SQLException;
 
@@ -18,10 +16,9 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
     //имя файла базы данных который будет храниться в /data/data/APPNAME/DATABASE_NAME.db
     private static final String DATABASE_NAME ="ppo.db";
     //с каждым увеличением версии, при нахождении в устройстве БД с предыдущей версией будет выполнен метод onUpgrade();
-    private static final int DATABASE_VERSION = 14;
+    private static final int DATABASE_VERSION = 23;
     //ссылки на DAO соответсвующие сущностям, хранимым в БД
     private ContentDAO contentDAO = null;
-    private VisitDAO visitDAO = null;
 
     public DatabaseHelper(Context context){
         super(context,DATABASE_NAME, null, DATABASE_VERSION);
@@ -33,7 +30,6 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
         try
         {
             TableUtils.createTable(connectionSource, Content.class);
-            TableUtils.createTable(connectionSource, Visit.class);
         }
         catch (SQLException e){
             Log.e(TAG, "error creating DB " + DATABASE_NAME);
@@ -48,7 +44,6 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
         try{
             //Так делают ленивые, гораздо предпочтительнее не удаляя БД аккуратно вносить изменения
             TableUtils.dropTable(connectionSource, Content.class, true);
-            TableUtils.dropTable(connectionSource, Visit.class, true);
             onCreate(db, connectionSource);
         }
         catch (SQLException e){
@@ -63,13 +58,6 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
             contentDAO = new ContentDAO(getConnectionSource(), Content.class);
         }
         return contentDAO;
-    }
-
-    public VisitDAO getVisitDAO() throws SQLException{
-        if(visitDAO == null){
-            visitDAO = new VisitDAO(getConnectionSource(), Visit.class);
-        }
-        return visitDAO;
     }
 
     //выполняется при закрытии приложения
