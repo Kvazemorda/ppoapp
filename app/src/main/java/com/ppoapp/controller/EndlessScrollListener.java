@@ -45,6 +45,13 @@ public abstract class EndlessScrollListener implements AbsListView.OnScrollListe
             this.previousTotalItemCount = totalItemCount;
             if (totalItemCount == 0) { this.loading = true; }
         }
+        if((totalItemCount-visibleItemCount) < visibleThreshold){
+            System.out.println("=================== totalItemCount-visibleItemCount " + (totalItemCount-visibleItemCount));
+            visibleThreshold = (totalItemCount-visibleItemCount) - 1;
+        }else {
+            visibleThreshold = 5;
+        }
+
         // If it's still loading, we check to see if the dataset count has
         // changed, if so we conclude it has finished loading and update the current page
         // number and total item count.
@@ -61,7 +68,6 @@ public abstract class EndlessScrollListener implements AbsListView.OnScrollListe
        // System.out.println(((firstVisibleItem + visibleItemCount + visibleThreshold) >= totalItemCount) + " ==================================================================");
         if (!loading && (firstVisibleItem + visibleItemCount + visibleThreshold) >= totalItemCount ) {
             loading = onLoadMore(currentPage + 1, totalItemCount);
-            loading = false;
         }
     }
 

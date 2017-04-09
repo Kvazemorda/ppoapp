@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
         loadNextDataFromApi(totalItems);
         listViewContent.setAdapter(adapterContent);
         fillListView();
-        loading = false;
+        //loading = false;
 
         Intent intent = new Intent(this, MyForeground.class);
 //        startService(super.getIntent().putExtra("time", 1));
@@ -99,8 +99,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(List<Content> contentsFromDB) {
             if(contentsFromDB.size() > 0){
-                addNewContent(contentsFromDB);
-                adapterContent.notifyDataSetChanged();
+                new AddNewContent().execute(contentsFromDB);
                 //проверка свежих новостей
                 //new HttpRequestForCheckNews().execute();
             }else {
@@ -164,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
                 if(list.size() > 0){
                     lastVisit = list.get(0).getModified().getTime();
                 }
-                addNewContent(list);
+                new AddNewContent().execute(list);
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -244,29 +243,45 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected synchronized void checkContentsOnOldNew(){
-        ArrayList<Content> copyContents = new ArrayList<>(contents);
+        ArrayList<Content> copyContents = new ArrayList<>(getContents());
         for(Content content: copyContents){
             if(content.getState() != 1){
-                contents.remove(content);
+                getContents().remove(content);
             }
-            adapterContent.notifyDataSetChanged();
         }
     }
 
     // сделать добавление нового контента асинхронно
     //понять почему не грузиться дальше лист.. почемуто loading не переходит в false
 
-    protected void addNewContent(List<Content> list){
-        for(Content content: list){
-            if(content.getState() == 1 && !contents.contains(content)){
-                contents.add(content);
-            }else if(content.getState() == 1 && contents.contains(content)){
-                contents.remove(content);
-                contents.add(content);
+    public class AddNewContent extends AsyncTask<List<Content>, Void, Void> {
+
+        @Override
+        protected Void doInBackground(List<Content>... params) {
+            addNewContent(params[0]);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            adapterContent.notifyDataSetChanged();
+        }
+    }
+
+    protected void addNewContent(List<Content> list) {
+        System.out.println(list.size() + " ==================================================================");
+        for (Content content : list) {
+            if (content.getState() == 1 && !getContents().contains(content)) {
+                getContents().add(content);
+            } else if (content.getState() == 1 && getContents().contains(content)) {
+                getContents().remove(content);
+                getContents().add(content);
             }
         }
         checkContentsOnOldNew();
-        adapterContent.notifyDataSetChanged();
     }
 
+    public synchronized ArrayList<Content> getContents() {
+        return contents;
+    }
 }

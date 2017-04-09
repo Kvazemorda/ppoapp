@@ -16,7 +16,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
     //имя файла базы данных который будет храниться в /data/data/APPNAME/DATABASE_NAME.db
     private static final String DATABASE_NAME ="ppo.db";
     //с каждым увеличением версии, при нахождении в устройстве БД с предыдущей версией будет выполнен метод onUpgrade();
-    private static final int DATABASE_VERSION = 23;
+    private static final int DATABASE_VERSION = 24;
     //ссылки на DAO соответсвующие сущностям, хранимым в БД
     private ContentDAO contentDAO = null;
 
