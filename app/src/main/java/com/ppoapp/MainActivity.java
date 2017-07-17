@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         fillListView();
         //loading = false;
 
-        Intent intent = new Intent(this, MyForeground.class);
+//        Intent intent = new Intent(this, MyForeground.class);
 //        startService(super.getIntent().putExtra("time", 1));
     }
 
@@ -142,6 +142,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 try {
                     Content[] rest = restTemplate.getForObject(url, Content[].class);
+                    System.out.println(rest.toString());
                     return rest;
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -266,19 +267,20 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(Void aVoid) {
             adapterContent.notifyDataSetChanged();
         }
-    }
 
-    protected void addNewContent(List<Content> list) {
-        System.out.println(list.size() + " ==================================================================");
-        for (Content content : list) {
-            if (content.getState() == 1 && !getContents().contains(content)) {
-                getContents().add(content);
-            } else if (content.getState() == 1 && getContents().contains(content)) {
-                getContents().remove(content);
-                getContents().add(content);
+
+        protected void addNewContent(List<Content> list) {
+            System.out.println(list.size() + " ==================================================================");
+            for (Content content : list) {
+                if (content.getState() == 1 && !getContents().contains(content)) {
+                    getContents().add(content);
+                } else if (content.getState() == 1 && getContents().contains(content)) {
+                    getContents().remove(content);
+                    getContents().add(content);
+                }
             }
+            checkContentsOnOldNew();
         }
-        checkContentsOnOldNew();
     }
 
     public synchronized ArrayList<Content> getContents() {
