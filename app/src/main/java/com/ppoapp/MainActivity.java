@@ -33,8 +33,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
     protected ArrayList<Content> contents;
     protected Long id = 1l;
-    protected int totalItems = 0;
-    boolean loading;
+    protected int totalItems = 0, maxResult = 11;
+    boolean loadMore = true;
     public ListView listViewContent;
     protected AdapterContent adapterContent;
     protected int limitQueryToServer = 5;
@@ -57,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
         loadNextDataFromApi(totalItems);
         listViewContent.setAdapter(adapterContent);
         fillListView();
-        //loading = false;
 
 //        Intent intent = new Intent(this, MyForeground.class);
 //        startService(super.getIntent().putExtra("time", 1));
@@ -89,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected List<Content> doInBackground(Void... params) {
             try {
-                return HelperFactory.getHelper().getContentDAO().getLimitContent(totalItems);
+                return HelperFactory.getHelper().getContentDAO().getLimitContent(totalItems, maxResult);
             } catch (SQLException e) {
                 e.printStackTrace();
                 return null;
@@ -101,9 +100,9 @@ public class MainActivity extends AppCompatActivity {
             if(contentsFromDB.size() > 0){
                 new AddNewContent().execute(contentsFromDB);
                 //проверка свежих новостей
-                //new HttpRequestForCheckNews().execute();
+                new HttpRequestForCheckNews().execute();
             }else {
-                new HttpRequestContent().execute(totalItems);
+                new HttpRequestContent().execute(totalItems, maxResult);
             }
         }
     }
@@ -122,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
             URI url = UriComponentsBuilder.fromUriString(Constans.HOST)
                     .path(Constans.CONTENT_BY_TOTAL)
                     .queryParam("totalItems", params[0])
+                    .queryParam("maxResult", params[1])
                     .build()
                     .toUri();
             System.out.println(url.toString());
@@ -142,7 +142,6 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 try {
                     Content[] rest = restTemplate.getForObject(url, Content[].class);
-                    System.out.println(rest.toString());
                     return rest;
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -155,12 +154,12 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(Content[] contentsArray) {
             //Обязательно передать в встроенную базу данных и потом из нее брать данные для приложения
             try {
-
                 for(Content content: contentsArray){
                     HelperFactory.getHelper().getContentDAO().createOrUpdate(content);
                 }
-                List<Content> list = HelperFactory.getHelper().getContentDAO().getLimitContent(totalItems);
+                List<Content> list = HelperFactory.getHelper().getContentDAO().getLimitContent(totalItems, maxResult);
                 //обновляю последний визит
+                //По идее последний визит надо обновить после обновления БД
                 if(list.size() > 0){
                     lastVisit = list.get(0).getModified().getTime();
                 }
@@ -205,6 +204,7 @@ public class MainActivity extends AppCompatActivity {
                     return lastVisit;
                 }else {
                     Content content = HelperFactory.getHelper().getContentDAO().getLastContent();
+                    System.out.println("-----------------------------------------------------------" + content.getTitle() + " " + content.getModified());
                     return content.getModified().getTime();
                 }
             } catch (SQLException e) {
@@ -230,8 +230,9 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Integer quantityLastNews) {
             if(quantityLastNews > 0){
-                new HttpRequestContent().execute(0);
+                new HttpRequestContent().execute(0 , maxResult);
             }else {
+                new HttpRequestContent().execute(totalItems, maxResult);
                 checkContentsOnOldNew();
             }
         }
@@ -270,13 +271,14 @@ public class MainActivity extends AppCompatActivity {
 
 
         protected void addNewContent(List<Content> list) {
-            System.out.println(list.size() + " ==================================================================");
             for (Content content : list) {
                 if (content.getState() == 1 && !getContents().contains(content)) {
                     getContents().add(content);
                 } else if (content.getState() == 1 && getContents().contains(content)) {
                     getContents().remove(content);
                     getContents().add(content);
+                } else if (content.getState() == 0){
+                    getContents().remove(content);
                 }
             }
             checkContentsOnOldNew();

@@ -71,7 +71,7 @@ public class MyImageLoader extends Activity {
                             writeFile(fileInternal, loadedImage);
                             //сохраняю пусть к файлу
                             content.setLocalImage(fileInternal.getAbsolutePath());
-                            System.out.println("!!!!!!!!!!!!!!!!!!! грузим картинку из БД");
+                         //   System.out.println("!!!!!!!!!!!!!!!!!!! грузим картинку из БД");
                             ImageLoader.getInstance().displayImage("file:///" + content.getLocalImage(), imageView);
                             Log.d("TAG", "Картинка загрузилась");
                         }else{

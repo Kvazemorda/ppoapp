@@ -20,11 +20,24 @@ public class ContentDAO extends BaseDaoImpl<Content, Integer> {
             return this.queryForAll();
     }
 
-    public List<Content> getLimitContent(int totalItems){
+    public List<Content> getLimitContent(int totalItems, int maxResult){
+        QueryBuilder<Content, Integer> queryBuilder = this.queryBuilder();
+        try {
+            queryBuilder.offset((long)totalItems).limit((long) maxResult);
+            queryBuilder.orderBy("modified", false);
+            return this.query(queryBuilder.prepare());
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
+    public List<Content> getLimitContentForChange(int totalItems){
         QueryBuilder<Content, Integer> queryBuilder = this.queryBuilder();
         try {
             queryBuilder.offset((long)totalItems).limit(10l);
-            queryBuilder.orderBy("modified", false);
+            queryBuilder.orderBy("modified", true);
             return this.query(queryBuilder.prepare());
         } catch (SQLException e) {
             e.printStackTrace();

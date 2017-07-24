@@ -45,12 +45,6 @@ public abstract class EndlessScrollListener implements AbsListView.OnScrollListe
             this.previousTotalItemCount = totalItemCount;
             if (totalItemCount == 0) { this.loading = true; }
         }
-        if((totalItemCount-visibleItemCount) < visibleThreshold){
-            System.out.println("=================== totalItemCount-visibleItemCount " + (totalItemCount-visibleItemCount));
-            visibleThreshold = (totalItemCount-visibleItemCount) - 1;
-        }else {
-            visibleThreshold = 5;
-        }
 
         // If it's still loading, we check to see if the dataset count has
         // changed, if so we conclude it has finished loading and update the current page
@@ -65,7 +59,6 @@ public abstract class EndlessScrollListener implements AbsListView.OnScrollListe
         // the visibleThreshold and need to reload more data.
         // If we do need to reload some more data, we execute onLoadMore to fetch the data.
 
-       // System.out.println(((firstVisibleItem + visibleItemCount + visibleThreshold) >= totalItemCount) + " ==================================================================");
         if (!loading && (firstVisibleItem + visibleItemCount + visibleThreshold) >= totalItemCount ) {
             loading = onLoadMore(currentPage + 1, totalItemCount);
         }
@@ -86,9 +79,9 @@ public abstract class EndlessScrollListener implements AbsListView.OnScrollListe
         }
         if(firstVisibleItem == 0 && scrollState == 0 && visibleSum == 0){
                 checkNewsForLoad();
-                visibleSum = 0;
+
         }
-        System.out.println("firstVisibleItem " + firstVisibleItem  + " scrollState " + scrollState  + " visibleSum " + visibleSum );
+      //  System.out.println("firstVisibleItem " + firstVisibleItem  + " scrollState " + scrollState  + " visibleSum " + visibleSum );
 
     }
 }
